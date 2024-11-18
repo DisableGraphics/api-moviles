@@ -21,6 +21,12 @@ struct UserRegister {
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
+struct Money {
+	user_id: u64,
+	money: u64
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
 struct ObjectiveRegister {
 	user_id: u64,
 	name: String,
@@ -188,6 +194,23 @@ async fn remove_objective(
 	Ok(warp::reply())
 }
 
+async fn set_money(
+	money: Money,
+	store: Store
+	)  -> Result<impl warp::Reply, warp::Rejection> {
+	{
+		let mut write = store.user_list.write();
+		let user = {
+			write.get(&money.user_id).and_then(|e|{Some(e.to_owned())})
+		};
+		if let Some(user) = user {
+			write.insert(money.user_id, (user.0.clone(), money.money));
+		}
+	}
+	let _ = store.save_users();
+	Ok(warp::reply())
+}
+
 fn post_json_user_register() -> impl Filter<Extract = (UserRegister,), Error = warp::Rejection> + Clone {
     // When accepting a body, we want a JSON body
     // (and to reject huge payloads)...
@@ -195,6 +218,12 @@ fn post_json_user_register() -> impl Filter<Extract = (UserRegister,), Error = w
 }
 
 fn post_json_add_objective() -> impl Filter<Extract = (ObjectiveRegister,), Error = warp::Rejection> + Clone {
+    // When accepting a body, we want a JSON body
+    // (and to reject huge payloads)...
+    warp::body::content_length_limit(1024 * 64).and(warp::body::json())
+}
+
+fn post_money() -> impl Filter<Extract = (Money,), Error = warp::Rejection> + Clone {
     // When accepting a body, we want a JSON body
     // (and to reject huge payloads)...
     warp::body::content_length_limit(1024 * 64).and(warp::body::json())
@@ -211,6 +240,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
 		.and(post_json_user_register())
 		.and(store_filter.clone())
 		.and_then(create_user);
+
+	let money = warp::post()
+		.and(warp::path("money"))
+		.and(warp::path::end())
+		.and(post_money())
+		.and(store_filter.clone())
+		.and_then(set_money);
 
 	let add_objective = warp::post()
 		.and(warp::path("objective"))
@@ -229,6 +265,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 	
 
     let routes = add_user
+		.or(money)
 		.or(add_objective)
 		.or(get_objectives)
 		.or(remove_objectives);
