@@ -1,8 +1,6 @@
-use rusqlite::Connection;
-use warp::{filters::method::get, http, Filter};
+use warp::{http, Filter};
 use parking_lot::RwLock;
-use std::fs::{self, File};
-use std::hash::Hash;
+use std::fs::File;
 use std::io::{self, BufRead, Write};
 use std::path::Path;
 use std::{collections::HashMap, error::Error};
