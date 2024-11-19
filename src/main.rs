@@ -1,7 +1,6 @@
-use structs::UserRegister;
-use warp::{filters::body::bytes, Filter, http};
+use warp::Filter;
 
-use std::{error::Error, io::Bytes};
+use std::error::Error;
 
 mod helper;
 mod handlers;

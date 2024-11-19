@@ -1,5 +1,18 @@
+use std::collections::HashMap;
+
 use crate::{store::Store, structs::{Money, Objective, ObjectiveRegister, UserRegister}};
 use warp::http;
+
+fn get_last_free<K>(list: &HashMap<u64, K>) -> usize {
+	let mut prev: usize = 0;
+	for elem in list {
+		if *elem.0 > (prev as u64) {
+			prev = *elem.0 as usize;
+		}
+	}
+
+	prev + 1
+}
 
 pub async fn create_user(
 	user: UserRegister,
@@ -19,7 +32,7 @@ pub async fn add_objective(
 	obj: ObjectiveRegister,
 	store: Store) -> Result<impl warp::Reply, warp::Rejection>
 {
-	let id = store.objective_list.read().len();
+	let id = get_last_free(&store.objective_list.read());
 	let user_exists = store.user_list.read().contains_key(&obj.user_id);
 
 	if user_exists {
@@ -74,7 +87,7 @@ pub async fn get_objectives(
 		}
 	}
 
-	println!("Got objs");
+	println!("Got objs: {:?}", ret);
 
 	Ok(warp::reply::json(
 		&ret
