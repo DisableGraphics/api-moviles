@@ -8,9 +8,10 @@ pub async fn create_user(
 	let id = store.user_list.read().len();
 	store.user_list.write().insert(id as u64, (user.name, 0));
 	let _ = store.save_users();
+	println!("Creating user {id}");
 	Ok(warp::reply::with_status(
 		format!("{}", id),
-		http::StatusCode::CREATED,
+		http::StatusCode::OK,
 	))
 }
 
@@ -24,9 +25,10 @@ pub async fn add_objective(
 	if user_exists {
 		store.objective_list.write().insert(id as u64, (obj.user_id, obj.name, obj.desc, obj.cost));
 		let _ = store.save_objectives();
+		println!("Created objective {id}");
 		Ok(warp::reply::with_status(
 			format!("{}", id),
-			http::StatusCode::CREATED,
+			http::StatusCode::OK,
 		))
 	} else {
 		Ok(warp::reply::with_status(
@@ -43,6 +45,7 @@ pub async fn edit_objective (
 	if user_exists {
 		store.objective_list.write().insert(obj.id as u64, (obj.user_id, obj.name, obj.desc, obj.cost));
 		let _ = store.save_objectives();
+		println!("Edited objective");
 		Ok(warp::reply::with_status("Ok", http::StatusCode::OK))
 	} else {
 		Ok(warp::reply::with_status(
@@ -71,6 +74,8 @@ pub async fn get_objectives(
 		}
 	}
 
+	println!("Got objs");
+
 	Ok(warp::reply::json(
 		&ret
 	))
@@ -84,6 +89,7 @@ pub async fn remove_objective(
 		let mut write = store.objective_list.write();
 		write.remove(&obj);
 	}
+	println!("Removed objective");
 	let _ = store.save_objectives();
 	Ok(warp::reply())
 }
@@ -101,6 +107,7 @@ pub async fn set_money(
 			write.insert(money.user_id, (user.0.clone(), money.money));
 		}
 	}
+	println!("Set money");
 	let _ = store.save_users();
 	Ok(warp::reply())
 }

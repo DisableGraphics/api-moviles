@@ -1,6 +1,7 @@
-use warp::Filter;
+use structs::UserRegister;
+use warp::{filters::body::bytes, Filter, http};
 
-use std::error::Error;
+use std::{error::Error, io::Bytes};
 
 mod helper;
 mod handlers;
@@ -41,11 +42,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
 		.and(warp::path!("objective" / u64))
 		.and(store_filter.clone())
 		.and_then(get_objectives);
-	let remove_objectives = warp::delete()
+	let remove_objective = warp::delete()
 		.and(warp::path!("objective" / u64))
 		.and(store_filter.clone())
 		.and_then(remove_objective);
-	let edit_objectives = warp::post()
+	let edit_objective = warp::post()
 		.and(warp::path!("edit_objective"))
 		.and(warp::path::end())
 		.and(post_json_edit_objective())
@@ -56,8 +57,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
 		.or(money)
 		.or(add_objective)
 		.or(get_objectives)
-		.or(remove_objectives)
-		.or(edit_objectives);
+		.or(remove_objective)
+		.or(edit_objective);
 	println!("Serving at 127.0.0.1:3030");
     warp::serve(routes)
         .run(([127, 0, 0, 1], 3030))
