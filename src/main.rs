@@ -4,7 +4,7 @@ use std::error::Error;
 
 mod helper;
 mod handlers;
-use handlers::{create_user, add_objective, edit_objective, get_objectives, remove_objective, set_money};
+use handlers::{add_objective, create_user, edit_objective, get_objectives, logo, remove_objective, set_money};
 mod structs;
 
 mod store;
@@ -52,12 +52,17 @@ async fn main() -> Result<(), Box<dyn Error>> {
 		.and(store_filter.clone())
 		.and_then(edit_objective);
 
+	let logo = warp::get()
+		.and(warp::path!("logo"))
+		.and_then(logo);
+
     let routes = add_user
 		.or(money)
 		.or(add_objective)
 		.or(get_objectives)
 		.or(remove_objective)
-		.or(edit_objective);
+		.or(edit_objective)
+		.or(logo);
 	println!("Serving at 127.0.0.1:3030");
     warp::serve(routes)
         .run(([127, 0, 0, 1], 3030))

@@ -1,7 +1,7 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, io::Read};
 
 use crate::{store::Store, structs::{Money, Objective, ObjectiveRegister, UserRegister}};
-use warp::http;
+use warp::{http, reply::Response};
 
 fn get_last_free<K>(list: &HashMap<u64, K>) -> usize {
 	let mut prev: usize = 0;
@@ -123,4 +123,18 @@ pub async fn set_money(
 	println!("Set money");
 	let _ = store.save_users();
 	Ok(warp::reply())
+}
+
+pub async fn logo() -> Result<impl warp::Reply, warp::Rejection> {
+	let img = std::fs::File::open("logo.png").unwrap();
+	let bytes: Vec<_> = img.bytes().filter_map(|x| { 
+		if x.is_ok() {
+			Some(x.unwrap())
+		} else {
+			None
+		}
+	}).collect();
+	let response = Response::new(bytes.into());
+	
+	Ok(response)
 }
